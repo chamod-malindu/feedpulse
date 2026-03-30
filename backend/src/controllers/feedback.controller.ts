@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Feedback from '../models/feedback.model';
 import { sendSuccess, sendError } from '../utils/response';
+import { analyseWithGemini, generateTrendSummary } from '../services/gemini.service';
 
 // submit new feedback (Public)
 export const submitFeedback = async (
@@ -16,6 +17,15 @@ export const submitFeedback = async (
       category,
       submitterName,
       submitterEmail,
+    });
+
+    // Trigger Gemini in background
+    analyseWithGemini(
+      feedback._id.toString(),
+      title,
+      description
+    ).catch((error) => {
+      console.error('Gemini analysis failed for feedback:', feedback._id, error);
     });
 
     sendSuccess(res, feedback, 'Feedback submitted successfully', 201);
@@ -35,7 +45,7 @@ export const getAllFeedback = async (
     const {
       category,
       status,
-      sort = '-createdAt', 
+      sort = '-createdAt',
       search,
       page = '1',
       limit = '10',
@@ -120,7 +130,7 @@ export const updateFeedbackStatus = async (
       req.params.id,
       { status },
       {
-        new: true,          
+        new: true,
         runValidators: true 
       }
     );
@@ -137,7 +147,6 @@ export const updateFeedbackStatus = async (
     sendError(res, 'Failed to update feedback');
   }
 };
-
 
 // Delete feedback (Admin)
 export const deleteFeedback = async (
@@ -157,5 +166,70 @@ export const deleteFeedback = async (
   } catch (error) {
     console.error('Delete feedback error:', error);
     sendError(res, 'Failed to delete feedback');
+  }
+};
+
+// GET trend summary (Admin)
+export const getFeedbackSummary = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentFeedback = await Feedback.find({
+      createdAt: { $gte: sevenDaysAgo },
+      ai_processed: true,
+    }).select('title ai_summary ai_category ai_sentiment ai_priority ai_tags');
+
+    if (recentFeedback.length === 0) {
+      sendSuccess(res, {
+        summary: 'No AI-processed feedback in the last 7 days.',
+        feedbackCount: 0,
+      });
+      return;
+    }
+
+    const summary = await generateTrendSummary(recentFeedback);
+
+    sendSuccess(res, {
+      summary,
+      feedbackCount: recentFeedback.length,
+      period: 'Last 7 days',
+    });
+
+  } catch (error) {
+    console.error('Get feedback summary error:', error);
+    sendError(res, 'Failed to generate summary');
+  }
+};
+
+// Re-analyse one feedback item (Admin)
+export const reanalyseFeedback = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const feedback = await Feedback.findById(req.params.id);
+
+    if (!feedback) {
+      sendError(res, 'Feedback not found', 404);
+      return;
+    }
+
+    analyseWithGemini(
+      feedback._id.toString(),
+      feedback.title,
+      feedback.description
+    ).catch((error) => {
+      console.error('Re-analysis failed:', error);
+    });
+
+    sendSuccess(res, null, 'AI re-analysis triggered successfully');
+
+  } catch (error) {
+    console.error('Reanalyse feedback error:', error);
+    sendError(res, 'Failed to trigger AI re-analysis');
   }
 };
