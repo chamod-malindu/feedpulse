@@ -233,3 +233,95 @@ export const reanalyseFeedback = async (
     sendError(res, 'Failed to trigger AI re-analysis');
   }
 };
+
+// Get stats for the dashboard stats bar (Admin)
+export const getFeedbackStats = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { category, status, search } = req.query;
+
+    const filter: Record<string, unknown> = {};
+    if (category) filter.category = category;
+    if (status) filter.status = status;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { ai_summary: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [statsResult, topTagResult] = await Promise.all([
+
+      Feedback.aggregate([
+        { $match: filter },
+        {
+          $group: {
+            _id: null, 
+            totalFeedback: { $sum: 1 }, 
+            openItems: {
+              $sum: {
+                $cond: [{ $ne: ['$status', 'Resolved'] }, 1, 0],
+              },
+            },
+            totalPriority: { $sum: '$ai_priority' }, 
+            countWithPriority: {
+              // Count only documents that HAVE a priority score
+              $sum: { $cond: [{ $ifNull: ['$ai_priority', false] }, 1, 0] },
+            },
+          },
+        },
+
+        // Reshape the output into a clean object
+        {
+          $project: {
+            _id: 0, 
+            totalFeedback: 1,
+            openItems: 1,
+            averagePriority: {
+              $cond: [
+                { $eq: ['$countWithPriority', 0] }, 
+                0,                                
+                { $divide: ['$totalPriority', '$countWithPriority'] },
+              ],
+            },
+          },
+        },
+      ]),
+
+      // Find the most common tag across all feedback
+      Feedback.aggregate([
+        { $match: filter },
+
+        { $unwind: '$ai_tags' },
+
+        // Group by tag name and count occurrences
+        {
+          $group: {
+            _id: '$ai_tags',       
+            count: { $sum: 1 },   
+          },
+        },
+
+        { $sort: { count: -1 } },
+
+        { $limit: 1 },
+      ]),
+    ]);
+
+    // Build the final stats object
+    const stats = {
+      totalFeedback: statsResult[0]?.totalFeedback ?? 0,
+      openItems: statsResult[0]?.openItems ?? 0,
+      averagePriority: Number((statsResult[0]?.averagePriority ?? 0).toFixed(1)),
+      topTag: topTagResult[0]?._id ?? 'N/A',
+    };
+
+    sendSuccess(res, stats, 'Stats fetched successfully');
+
+  } catch (error) {
+    console.error('Get feedback stats error:', error);
+    sendError(res, 'Failed to fetch stats');
+  }
+};

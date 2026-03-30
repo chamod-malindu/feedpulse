@@ -7,6 +7,7 @@ import {
   deleteFeedback,
   getFeedbackSummary,
   reanalyseFeedback,
+  getFeedbackStats,
 } from '../controllers/feedback.controller';
 import authMiddleware from '../middleware/auth.middleware';
 import { feedbackLimiter } from '../middleware/rateLimiter.middleware';
@@ -18,6 +19,7 @@ const router = Router();
 router.post('/', feedbackLimiter, validateFeedback, submitFeedback);
 
 // Admin
+router.get('/stats', authMiddleware, getFeedbackStats);
 router.get('/summary', authMiddleware, getFeedbackSummary);
 router.get('/', authMiddleware, getAllFeedback);
 router.get('/:id', authMiddleware, getFeedbackById);
