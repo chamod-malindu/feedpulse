@@ -135,19 +135,23 @@ export const generateTrendSummary = async (
       )
       .join('\n');
 
-    const prompt = `
-      You are a product analyst.
+    const prompt = `You are a product analyst. Analyse these 
+      ${feedbackItems.length} feedback items from the last 7 days.
 
-      Based on the following feedback submissions from the last 7 days, identify the top 3 themes or trends.
-      For each theme:
-      - explain what users are asking for or reporting
-      - mention its importance
-      - suggest a priority action
+      Identify the top 3 themes. For each theme write:
+      1. Theme title (one line)
+      2. What users report (one paragraph)  
+      3. Business impact (one paragraph)
+      4. Recommended action (one paragraph)
 
-      Feedback items:
+      Use clean markdown formatting:
+      - Use ## for theme titles
+      - Use **bold** for section labels
+      - No bullet points with *
+      - Keep language clear and direct
+
+      Feedback:
       ${feedbackList}
-
-      Return a concise plain text summary using numbered points.
       `;
 
     const text = await callGeminiWithRetry(prompt);
