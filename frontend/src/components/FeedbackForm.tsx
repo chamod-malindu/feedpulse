@@ -83,7 +83,7 @@ export default function FeedbackForm() {
   };
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
@@ -239,10 +239,10 @@ export default function FeedbackForm() {
             <SelectValue placeholder="Select a category..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Bug">Bug</SelectItem>
-            <SelectItem value="Feature Request">Feature Request</SelectItem>
-            <SelectItem value="Improvement">Improvement</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
+            <SelectItem value="Bug">🐛 Bug</SelectItem>
+            <SelectItem value="Feature Request">✨ Feature Request</SelectItem>
+            <SelectItem value="Improvement">🔧 Improvement</SelectItem>
+            <SelectItem value="Other">📌 Other</SelectItem>
           </SelectContent>
         </Select>
         {errors.category && (
