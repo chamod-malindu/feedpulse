@@ -10,9 +10,21 @@ const app = express();
 app.use(helmet());
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://feedpulse.com' 
-    : 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000',        // Local development
+      'http://frontend:3000',         // Docker container name
+      'http://localhost',             // Docker alternative
+    ];
+
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
   credentials: true,
 }));
 
