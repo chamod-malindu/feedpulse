@@ -1,66 +1,97 @@
-// Tests the Gemini response parsing logic without calling the real API.
-// This is important because:
-// 1. The real API costs money (on paid plans) or has rate limits
-// 2. Tests should be fast — API calls take 2-3 seconds each
-// 3. You want to test YOUR code, not whether Google's servers are up
+// Mock the Gemini API so no need to make real API calls during testing
+const mockGenerateContent = jest.fn();
+
+jest.mock('@google/genai', () => ({
+  GoogleGenAI: jest.fn().mockImplementation(() => ({
+    models: { generateContent: mockGenerateContent },
+  })),
+}));
+
+// Mock the Feedback model to check what gets saved to the database
+const mockFindByIdAndUpdate = jest.fn().mockResolvedValue({});
+jest.mock('../models/feedback.model', () => ({
+  __esModule: true,
+  default: {
+    findByIdAndUpdate: (...args: any[]) => mockFindByIdAndUpdate(...args),
+  },
+}));
+
+import { analyseWithGemini } from '../services/gemini.service';
+
+// sample data used across tests
+const feedbackId = '507f1f77bcf86cd799439011';
+const title = 'Add dark mode to the settings panel';
+const description = 'It would be helpful to have a dark mode option for better usability at night.';
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
 
 // ─── TEST SUITE 4: Gemini Response Parsing ─────────────────────
 
 describe('Gemini Response Parsing', () => {
 
-  it('should parse a valid JSON response correctly', () => {
-    // Simulate what Gemini returns — a JSON string
-    const mockResponse = JSON.stringify({
-      category: 'Feature Request',
-      sentiment: 'Positive',
-      priority_score: 8,
-      summary: 'User wants dark mode in settings.',
-      tags: ['UI', 'Settings', 'Accessibility'],
+  it('should parse a valid JSON response and save to database', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({
+        category: 'Feature Request',
+        sentiment: 'Positive',
+        priority_score: 8,
+        summary: 'User wants dark mode in settings.',
+        tags: ['UI', 'Settings', 'Accessibility'],
+      }),
     });
 
-    // This is what your gemini.service.ts does with the response
-    const parsed = JSON.parse(mockResponse);
+    await analyseWithGemini(feedbackId, title, description);
 
-    // Assert each field is correct
-    expect(parsed.category).toBe('Feature Request');
-    expect(parsed.sentiment).toBe('Positive');
-    expect(parsed.priority_score).toBe(8);
-    expect(parsed.summary).toBeDefined();
-    expect(Array.isArray(parsed.tags)).toBe(true);
-    expect(parsed.tags.length).toBeGreaterThan(0);
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+    expect(mockFindByIdAndUpdate).toHaveBeenCalledWith(feedbackId, {
+      ai_category: 'Feature Request',
+      ai_sentiment: 'Positive',
+      ai_priority: 8,
+      ai_summary: 'User wants dark mode in settings.',
+      ai_tags: ['UI', 'Settings', 'Accessibility'],
+      ai_processed: true,
+    });
   });
 
-  it('should clean JSON wrapped in markdown code blocks', () => {
+  it('should clean JSON wrapped in markdown code blocks', async () => {
     // Sometimes Gemini wraps JSON in markdown like this:
     // ```json
     // { ... }
     // ```
-    // Your code removes these wrappers before parsing
-    const mockResponse = '```json\n{"category":"Bug","sentiment":"Negative","priority_score":9,"summary":"App crashes on load.","tags":["crash","startup"]}\n```';
+    // Code must removes these wrappers before parsing
+    const wrapped = '```json\n{"category":"Bug","sentiment":"Negative","priority_score":9,"summary":"App crashes on load.","tags":["crash","startup"]}\n```';
 
-    // This is the cleaning logic from your gemini.service.ts
-    const cleaned = mockResponse
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
+    mockGenerateContent.mockResolvedValue({ text: wrapped });
+    await analyseWithGemini(feedbackId, title, description);
 
-    const parsed = JSON.parse(cleaned);
-    expect(parsed.category).toBe('Bug');
-    expect(parsed.priority_score).toBe(9);
+    expect(mockFindByIdAndUpdate).toHaveBeenCalledWith(feedbackId, {
+      ai_category: 'Bug',
+      ai_sentiment: 'Negative',
+      ai_priority: 9,
+      ai_summary: 'App crashes on load.',
+      ai_tags: ['crash', 'startup'],
+      ai_processed: true,
+    });
   });
 
-  it('should clamp priority score to the 1-10 range', () => {
-    // Your gemini.service.ts uses Math.min(10, Math.max(1, Math.round(score)))
-    // to ensure priority is always between 1 and 10
-    // This tests that logic
-    const clamp = (score: number) =>
-      Math.min(10, Math.max(1, Math.round(score)));
+  it('should clamp priority score that is out of range', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({
+        category: 'Bug',
+        sentiment: 'Negative',
+        priority_score: 15, // out of 1-10 range
+        summary: 'Critical crash.',
+        tags: ['crash'],
+      }),
+    });
 
-    expect(clamp(0)).toBe(1);   // Below minimum → 1
-    expect(clamp(15)).toBe(10); // Above maximum → 10
-    expect(clamp(5.7)).toBe(6); // Rounds up correctly
-    expect(clamp(-3)).toBe(1);  // Negative → 1
-    expect(clamp(7)).toBe(7);   // Normal value stays normal
+    await analyseWithGemini(feedbackId, title, description);
+
+    // 15 should be clamped down to 10
+    const savedData = mockFindByIdAndUpdate.mock.calls[0][1];
+    expect(savedData.ai_priority).toBe(10);
   });
 });
 
@@ -68,40 +99,78 @@ describe('Gemini Response Parsing', () => {
 
 describe('Gemini Service Validation Logic', () => {
 
-  it('should default to Other for invalid category values', () => {
-    // Your code validates the category before saving
-    // If Gemini returns something unexpected, default to 'Other'
-    const validCategories = ['Bug', 'Feature Request', 'Improvement', 'Other'];
-    const validate = (category: string) =>
-      validCategories.includes(category) ? category : 'Other';
+  it('should default to Other for invalid category', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({
+        category: 'SomeRandomCategory',
+        sentiment: 'Positive',
+        priority_score: 5,
+        summary: 'Some feedback.',
+        tags: ['misc'],
+      }),
+    });
 
-    expect(validate('Bug')).toBe('Bug');
-    expect(validate('Feature Request')).toBe('Feature Request');
-    expect(validate('RandomValue')).toBe('Other'); // Invalid → Other
-    expect(validate('')).toBe('Other');            // Empty → Other
+    await analyseWithGemini(feedbackId, title, description);
+
+    const savedData = mockFindByIdAndUpdate.mock.calls[0][1];
+    expect(savedData.ai_category).toBe('Other');
   });
 
-  it('should default to Neutral for invalid sentiment values', () => {
-    const validSentiments = ['Positive', 'Neutral', 'Negative'];
-    const validate = (sentiment: string) =>
-      validSentiments.includes(sentiment) ? sentiment : 'Neutral';
+  it('should default to Neutral for invalid sentiment', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({
+        category: 'Bug',
+        sentiment: 'VeryAngry',
+        priority_score: 7,
+        summary: 'User is upset.',
+        tags: ['support'],
+      }),
+    });
 
-    expect(validate('Positive')).toBe('Positive');
-    expect(validate('VeryNegative')).toBe('Neutral'); // Invalid → Neutral
-    expect(validate('')).toBe('Neutral');             // Empty → Neutral
+    await analyseWithGemini(feedbackId, title, description);
+
+    const savedData = mockFindByIdAndUpdate.mock.calls[0][1];
+    expect(savedData.ai_sentiment).toBe('Neutral');
   });
 
-  it('should limit tags to maximum 5 items', () => {
-    // Your code uses tags.slice(0, 5) to limit to 5 tags
-    const limit = (tags: string[]) =>
-      Array.isArray(tags) ? tags.slice(0, 5) : [];
+  it('should limit tags to 5 items max', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({
+        category: 'Improvement',
+        sentiment: 'Positive',
+        priority_score: 6,
+        summary: 'Multiple suggestions.',
+        tags: ['UI', 'Login', 'Bug', 'Crash', 'Mobile', 'Android', 'iOS'],
+      }),
+    });
 
-    const manyTags = ['UI', 'Login', 'Bug', 'Crash', 'Mobile', 'Android', 'iOS'];
-    expect(limit(manyTags).length).toBe(5); // Truncated to 5
+    await analyseWithGemini(feedbackId, title, description);
 
-    const fewTags = ['UI', 'Settings'];
-    expect(limit(fewTags).length).toBe(2); // Short list stays as is
+    const savedData = mockFindByIdAndUpdate.mock.calls[0][1];
+    expect(savedData.ai_tags.length).toBe(5);
+  });
 
-    expect(limit('not-an-array' as unknown as string[])).toEqual([]); // Non-array → empty
+  it('should handle invalid JSON from Gemini', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: 'not valid json!!',
+    });
+
+    await analyseWithGemini(feedbackId, title, description);
+
+    expect(mockFindByIdAndUpdate).toHaveBeenCalledWith(feedbackId, {
+      ai_processed: false,
+      ai_summary: 'AI analysis failed — parse error. Can be retried later.',
+    });
+  });
+
+  it('should handle API errors without crashing', async () => {
+    mockGenerateContent.mockRejectedValue(new Error('API quota exceeded'));
+
+    await analyseWithGemini(feedbackId, title, description);
+
+    expect(mockFindByIdAndUpdate).toHaveBeenCalledWith(feedbackId, {
+      ai_processed: false,
+      ai_summary: 'AI analysis failed — can be retried later',
+    });
   });
 });
