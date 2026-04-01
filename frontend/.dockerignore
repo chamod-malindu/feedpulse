@@ -1,0 +1,18 @@
+# Dependencies — reinstalled inside container
+node_modules
+
+# Environment variables — never in Docker image
+.env.local
+.env.local.example
+
+# Next.js build output — rebuilt inside container
+.next
+out
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE files
+.vscode
+.idea

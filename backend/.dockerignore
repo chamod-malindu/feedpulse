@@ -1,0 +1,16 @@
+# Dependencies — reinstalled inside container
+node_modules
+
+# Environment variables — never in Docker image
+.env
+
+# Compiled output — rebuilt inside container
+dist
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE files
+.vscode
+.idea
