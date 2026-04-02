@@ -16,9 +16,12 @@ const geistMono = Geist_Mono({
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'FeedPulse — AI-Powered Product Feedback',
+  title: 'FeedPulse - AI-Powered Product Feedback',
   description:
     'Collect, analyse, and prioritise product feedback with AI-powered insights.',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
