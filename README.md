@@ -59,10 +59,9 @@ FeedPulse follows a classic **client-server architecture** with a clear separati
 the frontend, backend, and external services.
 
 **Frontend (Next.js - Port 3000)**
-Built with Next.js 16 and React 19, using the App Router for both server-side and
-client-side rendering. The UI layer is composed of three pages - a public feedback
-form, an admin login page, and a JWT-protected dashboard. All HTTP communication
-with the backend is centralised in a single `api.ts` client, keeping API logic separate
+Built with Next.js 16 and React 19, using the App Router for both server-side and client-side rendering.   
+The UI layer is composed of three pages - a public feedback form, an admin login page, and a JWT-protected dashboard.   
+All HTTP communication with the backend is centralised in a single `api.ts` client, keeping API logic separate
 from UI components.
 
 **Backend API (Express.js - Port 4000)**
@@ -260,7 +259,7 @@ Make sure you have the following installed:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/feedpulse.git
+git clone https://github.com/chamod-malindu/feedpulse.git
 cd feedpulse
 ```
 
@@ -326,7 +325,7 @@ This creates the following admin account in your database:
 | Field | Value |
 |-------|-------|
 | **Email** | `admin@feedpulse.com` |
-| **Password** | `admin123` |
+| **Password** | `adminfeedpulse123` |
 
 > ⚠️ The password is automatically hashed using bcryptjs before being stored. It is never saved as plain text.
 
@@ -443,10 +442,13 @@ docker-compose down
 
 ### Backend Testing (`backend/.env.test`)
 
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `MONGO_URI` | **Yes** | Separate test MongoDB URI | `mongodb://localhost:27017/feedpulse-test` |
-| `JWT_SECRET` | **Yes** | JWT secret for test environment | `test-secret` |
+| Variable         | Required | Description                        | Example                                      |
+|------------------|----------|------------------------------------|----------------------------------------------|
+| `MONGO_URI`      | **Yes**  | Separate test MongoDB URI           | `mongodb://localhost:27017/feedpulse_test`   |
+| `JWT_SECRET`     | **Yes**  | JWT secret for test environment     | `test-secret`                                |
+| `GEMINI_API_KEY` | **Yes**  | Google Gemini API key for testing   | `AIzaSy... # your Gemini API key`            |
+| `NODE_ENV`       | No       | Environment mode for tests          | `test`                                       |
+
 
 ### Frontend (`frontend/.env.local`)
 
@@ -544,6 +546,15 @@ cp .env.test.example .env.test   # First time only - set test MongoDB URI
 npm test
 ```
 
+#### Example `backend/.env.test`
+
+```env
+MONGO_URI=mongodb://localhost:27017/feedpulse_test
+JWT_SECRET=test-secret
+GEMINI_API_KEY=AIzaSy... # your Gemini API key
+NODE_ENV=test
+```
+
 Tests run against a **separate test database** to avoid affecting development data.
 
 ### Test Coverage
@@ -593,7 +604,7 @@ npx jest --watch
 | `{ ai_priority: -1 }` | Single | Sort by priority (descending) |
 | `{ createdAt: -1 }` | Single | Sort by newest first |
 | `{ status: 1, category: 1 }` | Compound | Combined filter queries |
-| `{ title: 'text', ai_summary: 'text' }` | Text | Text index (search uses regex in controller) |
+| `{ title: 'text', ai_summary: 'text' }` | Text |Text index (for full-text search) |
 
 ### User Collection
 
@@ -626,9 +637,9 @@ npx jest --watch
 This project uses a professional branching strategy:
 
 ```
-main          ← Production-ready code (final merge only)
+ main         ← Production-ready code (final merge only)
   ↑
-develop       ← Integration branch (all features merge here)
+ dev          ← Integration branch (all features merge here)
   ↑
 feature/*     ← Individual feature branches
 ```
@@ -637,9 +648,6 @@ feature/*     ← Individual feature branches
 
 | Branch | Purpose |
 |--------|---------|
-| `feature/database-schemas` | Mongoose models and database connection |
-| `feature/backend-api` | Express REST API with all endpoints |
-| `feature/gemini-ai` | Google Gemini AI integration |
 | `feature/feedback-stats` | MongoDB aggregation stats endpoint |
 | `feature/frontend-submission` | Public landing page, frontend UI setup, Shadcn and feedback form |
 | `feature/admin-dashboard` | Admin login and dashboard |
