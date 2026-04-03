@@ -100,12 +100,26 @@ The backend acts as the sole intermediary for two external dependencies:
 
 ### Landing Page — Public Feedback Form
 ![Landing Page](frontend/public/screenshots/landingPage.png)
+*Public landing page with hero section and feedback submission form
+
+### Admin Login Page
+![Admin Login](frontend/public/screenshots/loginPage.png)
+*Protected admin login page* 
 
 ### Admin Dashboard — Feedback Management
 ![Admin Dashboard](frontend/public/screenshots/adminDashboard.png)
+*Dashboard with stats bar, AI trend summary, filters, and feedback list*
 
 ### AI Trend Summary
 ![AI Summary](frontend/public/screenshots/aiSummary.png)
+*Gemini AI-generated top 3 themes from recent feedback*
+
+### Feedback Card
+![Feedback Card](frontend/public/screenshots/feedback_card.png)
+*Feedback card with AI sentiment, priority score, tags, and Re-analyse button*
+
+
+
 
 ---
 
