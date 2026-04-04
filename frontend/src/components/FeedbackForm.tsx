@@ -64,6 +64,8 @@ export default function FeedbackForm() {
       newErrors.description = 'Description is required';
     } else if (formData.description.trim().length < 20) {
       newErrors.description = 'Description must be at least 20 characters';
+    } else if (formData.description.length > 1000) {      
+      newErrors.description = 'Description cannot exceed 1000 characters';
     }
 
     if (!formData.category) {
@@ -205,6 +207,7 @@ export default function FeedbackForm() {
           value={formData.description}
           onChange={handleChange}
           rows={5}
+          maxLength={1000} 
           placeholder="Describe your feedback in detail (minimum 20 characters)"
           className={errors.description ? "border-destructive focus-visible:ring-destructive" : ""}
         />
@@ -218,11 +221,18 @@ export default function FeedbackForm() {
           <span
             className={`text-xs ${
               formData.description.length < 20 && formData.description.length > 0
-                ? "text-orange-500 font-medium"
-                : "text-muted-foreground"
+                ? "text-orange-500 font-medium"    
+                : formData.description.length === 1000
+                ? "text-red-600 font-medium"
+                : formData.description.length > 900
+                ? "text-orange-500 font-medium"     
+                : "text-muted-foreground"         
             }`}
           >
-            {formData.description.length} / 20 min
+            {formData.description.length}/1000
+            {formData.description.length < 20 && formData.description.length > 0 && (
+              <span> · {20 - formData.description.length} more needed</span>
+            )}
           </span>
         </div>
       </div>

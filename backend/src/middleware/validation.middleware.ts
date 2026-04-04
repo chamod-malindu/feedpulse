@@ -12,7 +12,8 @@ export const validateFeedback = [
   body('description')
     .trim()
     .notEmpty().withMessage('Description is required')
-    .isLength({ min: 20 }).withMessage('Description must be at least 20 characters'),
+    .isLength({ min: 20, max: 1000 })
+    .withMessage('Description must be between 20 and 1000 characters'),
 
   body('category')
     .trim()
