@@ -32,7 +32,8 @@ const feedbackSchema = new Schema<IFeedback>({
     type: String,
     required: [true, 'Description is required'],
     trim: true,
-    maxlength: [200, 'Description cannot exceed 200 characters'],
+    minlength: [20, 'Description must be at least 20 characters'], 
+    maxlength: [1000, 'Description cannot exceed 1000 characters'],
   },
 
   category: {
