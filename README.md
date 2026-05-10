@@ -35,7 +35,6 @@
 - [Git Workflow](#git-workflow)
 - [Design](#design)
 - [What I Would Build Next](#what-i-would-build-next)
-- [Assignment Requirements Coverage](#assignment-requirements-coverage)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -689,7 +688,7 @@ feature/*     ← Individual feature branches
 
 ## What I Would Build Next
 
-Given more time, these are the features I would add:
+If I continue developing FeedPulse, these are the features I would add:
 
 | Priority | Feature | Description |
 |----------|---------|-------------|
@@ -703,62 +702,6 @@ Given more time, these are the features I would add:
 | 🟢 Low | **Queue system** | Redis/Bull for more robust AI processing under high load |
 | 🟢 Low | **Multi-product support** | Different teams with their own feedback boards |
 | 🟢 Low | **User authentication** | Allow users to track their own submitted feedback |
-
----
-
-## Assignment Requirements Coverage
-
-### Must Have ✅
-
-- [x] Public page where users can submit feedback without signing in
-- [x] Form fields: Title, Description, Category, Name (optional), Email (optional)
-- [x] Client-side form validation - no empty titles, minimum 20 characters in description
-- [x] POST to Node.js backend API and save to MongoDB
-- [x] Success and error states shown after submission
-- [x] Call Gemini API when new feedback is submitted
-- [x] Store all AI fields on the feedback document
-- [x] Handle Gemini errors gracefully - feedback saved even if AI fails
-- [x] Show badge on each feedback card
-- [x] Protected dashboard - only accessible after logging in
-- [x] Table/card list with title, category, sentiment badge, priority score, date
-- [x] Filter feedback by category
-- [x] Filter feedback by status
-- [x] Admin can update the status of any feedback item
-- [x] All required REST API endpoints
-- [x] Consistent JSON response format
-- [x] Mongoose schemas with proper field types and validations
-- [x] Admin routes protected by JWT middleware
-- [x] Environment variables for all secrets
-- [x] Input sanitisation - reject bad input before saving to DB
-- [x] Proper HTTP status codes
-- [x] Separate route, controller, and model files
-- [x] Feedback schema matches the spec with all required fields and types
-- [x] MongoDB indexes on status, category, ai_priority, createdAt
-- [x] Timestamps enabled (createdAt, updatedAt)
-- [x] Public GitHub repository
-- [x] Complete README.md
-- [x] .gitignore includes node_modules, .env, build output
-- [x] Meaningful commit messages
-- [x] At least 5 commits spread across the project
-
-### Nice to Have ✅
-
-- [x] Character counter on description field
-- [x] Rate limiting - 5 submissions per hour per IP
-- [x] AI weekly/on-demand summary
-- [x] Admin can manually re-trigger AI analysis
-- [x] Sort feedback by date and priority score
-- [x] Search feedback by keyword
-- [x] Stats bar at the top
-- [x] Paginated results (10 items per page)
-- [x] Separate User collection for admin credentials
-- [x] The README includes a short note on what I would build next if I had more time
-- [x] GitHub branches used
-
-### Bonus ✅
-
-- [x] Docker and docker-compose setup
-- [x] Unit tests with Jest and Supertest
 
 ---
 
