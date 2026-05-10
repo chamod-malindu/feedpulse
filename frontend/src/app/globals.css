@@ -141,7 +141,7 @@
 }
 
 @layer utilities {
-  .throughout-gradient {
+  .feedpulse-gradient {
     background: linear-gradient(
       135deg,
       #e8f4fd 0%,
@@ -182,7 +182,7 @@
     transform: none;
   }
 
-  .throughout-label {
+  .feedpulse-label {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
@@ -197,7 +197,7 @@
     border-radius: 9999px;
   }
 
-  .throughout-icon-bg {
+  .feedpulse-icon-bg {
     width: 3.5rem;
     height: 3.5rem;
     border-radius: 9999px;

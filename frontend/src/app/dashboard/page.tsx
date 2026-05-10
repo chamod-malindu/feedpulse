@@ -206,7 +206,7 @@ export default function DashboardPage() {
   // Prevent rendering the dashboard until we confirm authentication status 
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen throughout-gradient 
+      <div className="min-h-screen feedpulse-gradient 
         flex items-center justify-center">
         <Loader2 
           className="w-8 h-8 animate-spin" 
@@ -217,7 +217,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen throughout-gradient">
+    <div className="min-h-screen feedpulse-gradient">
 
       {/* HEADER */}
       <header className="bg-white/90 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -261,7 +261,7 @@ export default function DashboardPage() {
         {/* PAGE TITLE */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="throughout-label mb-2">
+            <div className="feedpulse-label mb-2">
               <span>●</span>
               <span>Feedback Management</span>
             </div>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="throughout-icon-bg w-8 h-8">
+              <div className="feedpulse-icon-bg w-8 h-8">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -511,7 +511,7 @@ export default function DashboardPage() {
             </div>
           ) : feedbacks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-2xl border border-border">
-              <div className="throughout-icon-bg">
+              <div className="feedpulse-icon-bg">
                 <Search className="w-5 h-5 text-white" />
               </div>
               <p className="text-sm font-medium text-foreground">

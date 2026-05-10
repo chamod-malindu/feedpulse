@@ -58,7 +58,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
 
           <div className="flex justify-center mb-6">
-            <span className="throughout-label">
+            <span className="feedpulse-label">
               <span>●</span>
               <span>AI-Powered Feedback Platform</span>
             </span>
@@ -88,12 +88,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="throughout-gradient py-20">
+      <section className="feedpulse-gradient py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
           <div className="text-center mb-12">
             <div className="flex justify-center mb-4">
-              <span className="throughout-label">
+              <span className="feedpulse-label">
                 <span>●</span>
                 <span>How It Works</span>
               </span>
@@ -113,7 +113,7 @@ export default function HomePage() {
                 key={step}
                 className="bg-white rounded-2xl border border-border p-6 card-hover"
               >
-                <div className="throughout-icon-bg mb-4">
+                <div className="feedpulse-icon-bg mb-4">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="text-xs font-bold text-primary mb-2 tracking-widest">
@@ -144,15 +144,15 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-sm" style={{ color: '#a1a8b0' }}>
-              Built for{" "}
+              Built by{" "}
               <a
-                href="https://throughout.io"
+                href="https://github.com/chamod-malindu/guidemelk-pusher"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white transition-colors"
                 style={{ color: '#0ba5ec' }}
               >
-                Throughout
+                GuideMeLK
               </a>{" "}
               · Powered by Google Gemini AI
             </div>
